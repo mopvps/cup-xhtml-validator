@@ -407,20 +407,26 @@ window.Reporter = {
     const start = Math.max(0, col - 1);
     const end = Math.min(lineText.length, start + length);
 
-    const beforeWords = lineText.slice(0, start).trim().split(/\s+/).filter(Boolean).slice(-10).join(' ');
-    const afterWords = lineText.slice(end).trim().split(/\s+/).filter(Boolean).slice(0, 10).join(' ');
-    const highlighted = lineText.slice(start, end) || '·';
+    const beforeRaw = lineText.slice(0, start);
+    const afterRaw = lineText.slice(end);
+
+    const beforeWords = beforeRaw.trim().split(/\s+/).filter(Boolean).slice(-10).join(' ');
+    const afterWords = afterRaw.trim().split(/\s+/).filter(Boolean).slice(0, 10).join(' ');
+    const highlighted = lineText.slice(start, end) || '';
 
     const before = this._escape(beforeWords);
     const highlight = `<span class="error-highlight">${this._escape(highlighted)}</span>`;
     const after = this._escape(afterWords);
 
-    const parts = [];
-    if (before) parts.push(before);
-    parts.push(highlight);
-    if (after) parts.push(after);
+    // Preserve original spacing at boundaries instead of always inserting a space
+    const sepBefore = beforeRaw.length && /\s$/.test(beforeRaw) ? ' ' : '';
+    const sepAfter = afterRaw.length && /^\s/.test(afterRaw) ? ' ' : '';
 
-    return `...${parts.join(' ')}...`;
+    let result = '';
+    if (before) result += before + sepBefore;
+    result += highlight;
+    if (after) result += sepAfter + after;
+    return result;
   },
 
   _escape(str) {

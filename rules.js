@@ -133,6 +133,12 @@ window.RULES = {
         const snippet = line.slice(start, end).trim();
 
         if (isDigit(a) && isLetter(b)) {
+          // Skip ordinal suffixes: 1st, 2nd, 3rd, 4th...nth
+          const twoChar = (b + (line[c + 2] || '')).toLowerCase();
+          const isOrdinal = twoChar === 'st' || twoChar === 'nd' || twoChar === 'rd' || twoChar === 'th';
+          // Skip decade/era patterns: 1690s, 1800s etc. (digit followed by 's' then non-letter)
+          const isDecadeS = (b === 's' || b === 'S') && (!line[c + 2] || !isLetter(line[c + 2]));
+          if (isOrdinal || isDecadeS) continue;
           results.push({
             ruleId: 'invalid-char-spacing',
             line: i + 1,
