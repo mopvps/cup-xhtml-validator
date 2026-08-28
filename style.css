@@ -411,10 +411,12 @@ html, body {
   display: flex;
   gap: 14px;
   margin-bottom: 28px;
+  flex-wrap: wrap;
 }
 
 .stat-card {
   flex: 1;
+  min-width: 140px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-card);
@@ -684,10 +686,18 @@ html, body {
 
 .issue-table td.col-whats-wrong {
   color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
 }
 
 .issue-table td.col-where {
   font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
 }
 
 .issue-table td.col-location {
