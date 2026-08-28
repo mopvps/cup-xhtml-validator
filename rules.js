@@ -199,6 +199,8 @@ window.RULES = {
 
     const els = body.querySelectorAll(BLOCK_TAGS);
     els.forEach(el => {
+      if (['TITLE','HEAD','SCRIPT','STYLE'].includes(el.tagName.toUpperCase())) return;
+
       // Skip if this element contains other block elements — only check leaf blocks
       const BLOCK_TAG_NAMES = ['P','DIV','H1','H2','H3','H4','H5','H6','LI','BLOCKQUOTE','TD','TH'];
       const hasBlockChild = Array.from(el.children).some(c => BLOCK_TAG_NAMES.includes(c.tagName.toUpperCase()));
@@ -229,16 +231,25 @@ window.RULES = {
       if (first >= 'a' && first <= 'z') {
         const needle = ownText.slice(0, 20);
         let lineNum = 1, colNum = 1;
-        for (let i = 0; i < parsed.lines.length; i++) {
-          if (!parsed.textMask[i]) continue;
+        outer: for (let i = 0; i < parsed.lines.length; i++) {
           const line = parsed.lines[i];
           const mask = parsed.textMask[i];
-          // Find needle only in visible text positions (textMask = true)
-          const idx = line.indexOf(needle);
-          if (idx !== -1 && mask[idx]) {
-            lineNum = i + 1;
-            colNum = idx + 1;
-            break;
+          if (!mask) continue;
+          let searchFrom = 0;
+          while (true) {
+            const idx = line.indexOf(needle, searchFrom);
+            if (idx === -1) break;
+            if (mask[idx]) {
+              // Only accept if this position is at start of visible text run
+              // i.e. char before is either start of line, or previous char is not visible text
+              const prevVisible = idx > 0 && mask[idx - 1];
+              if (!prevVisible) {
+                lineNum = i + 1;
+                colNum = idx + 1;
+                break outer;
+              }
+            }
+            searchFrom = idx + 1;
           }
         }
 

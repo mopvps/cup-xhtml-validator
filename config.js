@@ -66,6 +66,6 @@ window.RULES_CONFIG = [
   { id: 'file-size', name: 'File Size Limit', description: 'File must not exceed 300KB', enabled: true, severity: 'error' },
   { id: 'para-end-punctuation', name: 'Paragraph End Punctuation', description: 'Every <p> tag must end with . or ; before closing', enabled: true, severity: 'error' },
   { id: 'li-span-between', name: 'Span Between List Items', description: 'A <span> tag must not appear between </li> and <li>', enabled: true, severity: 'error' },
-  { id: 'unlinked-reference', name: 'Unlinked Cross-Reference', description: 'Flags cross-reference keywords (Figure, Table, Ch. etc.) followed by a number that are not wrapped in an <a> tag', enabled: true, severity: 'warn' },
+  { id: 'unlinked-reference', name: 'Missing Hyperlink on Reference Text', description: 'Flags cross-reference keywords (Figure, Table, Ch. etc.) followed by a number that are not wrapped in an <a> tag', enabled: true, severity: 'warn' },
   { id: 'raw-url', name: 'Raw URL in Text', description: 'Flags raw URLs (http, https, www, ftp, mailto) found in visible text content', enabled: true, severity: 'warn' }
 ];

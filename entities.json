@@ -1302,12 +1302,6 @@
     "Character": "&dlcrop;"
   },
   {
-    "Entity Name": "$",
-    "Decimal": "&#36;",
-    "Hexadecimal": "&#x24;",
-    "Character": "&dollar;"
-  },
-  {
     "Entity Name": "𝕉",
     "Decimal": "&#120149;",
     "Hexadecimal": "&#x1D555;",
@@ -1648,12 +1642,6 @@
     "Decimal": "&#8364;",
     "Hexadecimal": "&#x20AC;",
     "Character": "&euro;"
-  },
-  {
-    "Entity Name": "!",
-    "Decimal": "&#33;",
-    "Hexadecimal": "&#x21;",
-    "Character": "&excl;"
   },
   {
     "Entity Name": "∃",
