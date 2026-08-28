@@ -589,22 +589,30 @@ window.RULES['li-span-between'] = function(parsed) {
     if (/<(ul|ol)[\s>]/i.test(trimmed)) insideList = true;
     if (/<\/(ul|ol)>/i.test(trimmed)) { insideList = false; insideLi = false; }
 
-    // Track entering/exiting li
     if (/<li[\s>]/i.test(trimmed)) insideLi = true;
-    if (/<\/li>/i.test(trimmed)) insideLi = false;
 
-    // Flag any span that is inside list but outside li
+    // Span check BEFORE closing </li> resets the flag
     if (insideList && !insideLi && /<span/i.test(trimmed)) {
-      const col = line.indexOf('<span') + 1;
-      issues.push({
-        ruleId: 'li-span-between',
-        line: i + 1,
-        col,
-        length: trimmed.length,
-        message: `Span tag found outside <li> inside a list`,
-        detail: `Found: ${trimmed} as direct child of list`
-      });
+      const spanIdx = line.toLowerCase().indexOf('<span');
+      const liIdx = line.toLowerCase().indexOf('<li');
+      if (liIdx !== -1 && liIdx < spanIdx) {
+        // span is inside an <li> that opens on this line — not a real issue
+      } else {
+        const col = spanIdx + 1;
+        issues.push({
+          ruleId: 'li-span-between',
+          line: i + 1,
+          col,
+          length: trimmed.length,
+          message: `Span tag found outside <li> inside a list`,
+          detail: `Found: ${trimmed} as direct child of list`
+        });
+      }
     }
+
+    // Reset insideLi AFTER span check so </li> on same line as <span doesn't cause false positive
+    if (/<\/li>/i.test(trimmed)) insideLi = false;
+    if (/<li[\s>]/i.test(trimmed) && /<\/li>/i.test(trimmed)) insideLi = false;
   });
 
   return issues;
