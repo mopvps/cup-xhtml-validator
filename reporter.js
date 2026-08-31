@@ -176,51 +176,29 @@ window.Reporter = {
           inner.appendChild(row);
         });
       } else if (group.ruleId === 'li-span-between') {
-        const lines = this.currentReport.parsed.lines;
+        const table = document.createElement('table');
+        table.className = 'issue-table';
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th class="col-whats-wrong">What's wrong</th>
+              <th class="col-where">Where it is</th>
+              <th class="col-location">Location</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
         group.issues.forEach(issue => {
-          const wrap = document.createElement('div');
-          wrap.className = 'group-issue-row';
-          wrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:12px 16px;';
-
-          // 1. Explanation
-          const explain = document.createElement('div');
-          explain.style.cssText = 'font-weight:600;color:var(--fail);';
-          explain.textContent = 'A span tag was found outside a <li> inside a list — it should be removed or moved inside a list item';
-          wrap.appendChild(explain);
-
-          // 2. Code block context
-          const prevLine = lines[issue.line - 2] || '';
-          const currLine = lines[issue.line - 1] || '';
-          const nextLine = lines[issue.line] || '';
-
-          const block = document.createElement('div');
-          block.style.cssText = 'font-family:var(--font-mono);font-size:13px;display:flex;flex-direction:column;gap:2px;border-radius:var(--r-card);overflow:hidden;';
-
-          const prev = document.createElement('div');
-          prev.style.cssText = 'color:var(--text-muted);white-space:pre;padding:2px 10px;';
-          prev.textContent = prevLine.trim();
-
-          const curr = document.createElement('div');
-          curr.style.cssText = 'background:var(--fail-soft);color:var(--fail);padding:2px 10px;border-left:3px solid var(--fail);white-space:pre;font-weight:600;';
-          curr.textContent = currLine.trim();
-
-          const next = document.createElement('div');
-          next.style.cssText = 'color:var(--text-muted);white-space:pre;padding:2px 10px;';
-          next.textContent = nextLine.trim();
-
-          block.appendChild(prev);
-          block.appendChild(curr);
-          block.appendChild(next);
-          wrap.appendChild(block);
-
-          // 3. Line number
-          const loc = document.createElement('div');
-          loc.style.cssText = 'font-size:12px;color:var(--text-muted);';
-          loc.textContent = `Line ${issue.line}`;
-          wrap.appendChild(loc);
-
-          inner.appendChild(wrap);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="col-whats-wrong">Span found outside a list item</td>
+            <td class="col-where"><span class="snippet-text">${this._escape(issue.detail.replace('Found: ', '').replace(' as direct child of list', '').trim().slice(0, 60))}</span></td>
+            <td class="col-location">Line ${issue.line} · Col ${issue.col}</td>
+          `;
+          tbody.appendChild(tr);
         });
+        inner.appendChild(table);
       } else if (group.ruleId === 'unlinked-reference') {
         group.issues.forEach(issue => {
           const row = document.createElement('div');
