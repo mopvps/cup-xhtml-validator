@@ -324,26 +324,56 @@ window.RULES = {
       return val;
     };
 
-    const isRoman = str => /^[ivxlcdm]+$/i.test(str);
+    const intToRoman = (num, uppercase = false) => {
+      const lookup = [
+        [1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'],
+        [100, 'c'], [90, 'xc'], [50, 'l'], [40, 'xl'],
+        [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']
+      ];
+      let res = '';
+      for (const [val, char] of lookup) {
+        while (num >= val) {
+          res += char;
+          num -= val;
+        }
+      }
+      return uppercase ? res.toUpperCase() : res;
+    };
+
+    const isRoman = str => /^(?=[ivxlcdm])m{0,4}(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3})$/i.test(str);
 
     const parsePageNum = val => {
-      if (isRoman(val)) return { type: 'roman', value: romanToInt(val), raw: val };
-      const n = parseInt(val, 10);
-      if (!isNaN(n)) return { type: 'numeric', value: n, raw: val };
+      if (/^\d+$/.test(val)) {
+        return { type: 'numeric', value: parseInt(val, 10), raw: val };
+      }
+      if (isRoman(val)) {
+        return { type: 'roman', value: romanToInt(val), raw: val, isUpper: val === val.toUpperCase() };
+      }
       return null;
     };
 
-    // Use raw line scanning instead of DOM
+    // Scan lines for pagebreak tags
     const pages = [];
-    const regex = /id="page_([^"]+)"/;
+    const pagebreakTagRegex = /<[^>]*?(?:pagebreak|role=["']doc-pagebreak["']|epub:type=["']pagebreak["']|id=["'](?:page|pb)[_-]?\w+["'])[^>]*?>/gi;
+    const idRegex = /id=["']([^"']+)["']/i;
+
     parsed.lines.forEach((line, i) => {
-      if (!line.includes('doc-pagebreak')) return;
-      const match = line.match(regex);
-      if (!match) return;
-      const val = match[1];
-      const parsed2 = parsePageNum(val);
-      if (!parsed2) return;
-      pages.push({ ...parsed2, line: i + 1 });
+      let tagMatch;
+      // Reset regex index per line
+      pagebreakTagRegex.lastIndex = 0;
+      while ((tagMatch = pagebreakTagRegex.exec(line)) !== null) {
+        const tagStr = tagMatch[0];
+        const idMatch = tagStr.match(idRegex);
+        if (!idMatch) continue;
+
+        const rawId = idMatch[1];
+        const pageVal = rawId.replace(/^(?:page|pb)[_-]?/i, '');
+        const parsed2 = parsePageNum(pageVal);
+        if (!parsed2) continue;
+
+        const col = tagMatch.index + 1;
+        pages.push({ ...parsed2, rawId, line: i + 1, col, length: tagStr.length });
+      }
     });
 
     // Check sequence
@@ -352,12 +382,24 @@ window.RULES = {
       const next = pages[i + 1];
       if (cur.type !== next.type) continue;
       if (next.value !== cur.value + 1) {
+        let expectedRaw = '';
+        if (cur.type === 'roman') {
+          expectedRaw = intToRoman(cur.value + 1, cur.isUpper);
+        } else {
+          const expectedVal = cur.value + 1;
+          if (cur.raw.startsWith('0') && cur.raw.length > 1) {
+            expectedRaw = String(expectedVal).padStart(cur.raw.length, '0');
+          } else {
+            expectedRaw = String(expectedVal);
+          }
+        }
+
         results.push({
           ruleId: 'pagebreak-sequence',
           line: next.line,
-          col: 1,
-          length: 1,
-          message: `Page "${next.raw}" is out of sequence — expected "${cur.value + 1}" after "${cur.raw}"`,
+          col: next.col || 1,
+          length: next.length || 1,
+          message: `Page "${next.raw}" is out of sequence — expected "${expectedRaw}" after "${cur.raw}"`,
           detail: `page_${next.raw}`
         });
       }

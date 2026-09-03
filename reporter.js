@@ -129,12 +129,20 @@ window.Reporter = {
         // Collect all pagebreaks from raw lines
         const allPages = [];
         const errorLines = new Set(group.issues.map(i => i.line));
-        const regex = /id="page_([^"]+)"/;
+        const pagebreakTagRegex = /<[^>]*?(?:pagebreak|role=["']doc-pagebreak["']|epub:type=["']pagebreak["']|id=["'](?:page|pb)[_-]?\w+["'])[^>]*?>/gi;
+        const idRegex = /id=["']([^"']+)["']/i;
+
         this.currentReport.parsed.lines.forEach((line, i) => {
-          if (!line.includes('pagebreak')) return;
-          const match = line.match(regex);
-          if (!match) return;
-          allPages.push({ num: match[1], line: i + 1, isError: errorLines.has(i + 1) });
+          let tagMatch;
+          pagebreakTagRegex.lastIndex = 0;
+          while ((tagMatch = pagebreakTagRegex.exec(line)) !== null) {
+            const tagStr = tagMatch[0];
+            const idMatch = tagStr.match(idRegex);
+            if (!idMatch) continue;
+            const rawId = idMatch[1];
+            const pageVal = rawId.replace(/^(?:page|pb)[_-]?/i, '');
+            allPages.push({ num: pageVal, line: i + 1, isError: errorLines.has(i + 1) });
+          }
         });
 
         // Render circles
