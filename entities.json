@@ -2898,12 +2898,6 @@
     "Character": "&lowast;"
   },
   {
-    "Entity Name": "_",
-    "Decimal": "&#95;",
-    "Hexadecimal": "&#x5F;",
-    "Character": "&lowbar;"
-  },
-  {
     "Entity Name": "◊",
     "Decimal": "&#9674;",
     "Hexadecimal": "&#x25CA;",

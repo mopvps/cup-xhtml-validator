@@ -638,7 +638,7 @@ window.RULES['li-span-between'] = function(parsed) {
 window.RULES['unlinked-reference'] = function(parsed) {
   const issues = [];
 
-  const REFERENCE_RE = /(?<![A-Za-z])(Figure|Fig\.|Fig|Illustration|Illus\.|Ill\.|Chapter|Ch\.|Section|Sect\.|Sec\.|Appendix|App\.|Algorithm|Algo\.|Exercise|Equation|Eq\.|Footnote|Theorem|Thm\.|Listing|List\.|Problem|Prob\.|Example|Ex\.|Article|Art\.|Exhibit|Formula|Diagram|Sidebar|Annex|Amendment|Schedule|Clause|Specimen|Solution|Sample|Stanza|Scene|Verse|Volume|Vol\.|Plate|Pl\.|Table|Tab\.|Graph|Chart|Image|Scheme|Lemma|Proof|Answer|Panel|Part|Map|Box|Note|Act|Line|Case)(?![A-Za-z])[\s\-\.]*(\d[\d\.]*[A-Za-z]?)/gi;
+  const REFERENCE_RE = /(?<![A-Za-z])(?:(Chapter|Ch\.)[\s\-\.]*([IVXLCDMivxlcdm]+|\d[\d\.]*[A-Za-z]?)|(Figure|Fig\.|Fig|Illustration|Illus\.|Ill\.|Section|Sect\.|Sec\.|Appendix|App\.|Algorithm|Algo\.|Exercise|Equation|Eq\.|Footnote|Theorem|Thm\.|Listing|List\.|Problem|Prob\.|Example|Ex\.|Article|Art\.|Exhibit|Formula|Diagram|Sidebar|Annex|Amendment|Schedule|Clause|Specimen|Solution|Sample|Stanza|Scene|Verse|Volume|Vol\.|Plate|Pl\.|Table|Tab\.|Graph|Chart|Image|Scheme|Lemma|Proof|Answer|Panel|Part|Map|Box|Note|Act|Line|Case)[\s\-\.]*(\d[\d\.]*[A-Za-z]?))(?![A-Za-z])/gi;
 
   parsed.lines.forEach((line, i) => {
     // Skip if entire match is inside an <a>...</a> tag
