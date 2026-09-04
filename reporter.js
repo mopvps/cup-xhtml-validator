@@ -2,10 +2,42 @@
 window.Reporter = {
   currentReport: null,
   currentFilter: 'all',
+  isExpandedAll: false,
+
+  init() {
+    const btnExpand = document.getElementById('btnToggleExpand');
+    if (btnExpand) {
+      btnExpand.addEventListener('click', () => {
+        this.isExpandedAll = !this.isExpandedAll;
+        btnExpand.textContent = this.isExpandedAll ? 'Collapse All' : 'Expand All';
+        document.querySelectorAll('#resultList .rule-group').forEach(group => {
+          const header = group.querySelector('.rule-group-header');
+          const arrow = group.querySelector('.group-arrow');
+          if (this.isExpandedAll) {
+            group.classList.add('expanded');
+            if (arrow) arrow.textContent = '▼';
+          } else {
+            group.classList.remove('expanded');
+            if (arrow) arrow.textContent = '▶';
+          }
+        });
+      });
+    }
+
+    const btnExport = document.getElementById('btnExportReport');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => this.exportReport());
+    }
+  },
 
   render(report) {
     this.currentReport = report;
     this.currentFilter = 'all';
+    this.isExpandedAll = false;
+    const btnExpand = document.getElementById('btnToggleExpand');
+    if (btnExpand) btnExpand.textContent = 'Expand All';
+
+    this._renderBanner(report);
     this._renderStats(report);
     this._renderList();
   },
@@ -18,16 +50,91 @@ window.Reporter = {
     this._renderList();
   },
 
+  _renderBanner(report) {
+    const banner = document.getElementById('resultsBanner');
+    if (!banner) return;
+
+    if (report.issueCount === 0) {
+      banner.className = 'results-banner banner-pass';
+      banner.innerHTML = `
+        <div class="banner-icon">🎉</div>
+        <div class="banner-content">
+          <div class="banner-title">Document is Clean & Compliant!</div>
+          <div class="banner-desc">All ${report.activeRules.length} enabled checks passed without any errors or warnings.</div>
+        </div>
+      `;
+    } else {
+      const errors = report.issues.filter(i => {
+        const rule = report.activeRules.find(r => r.id === i.ruleId);
+        return !rule || rule.severity === 'error';
+      }).length;
+      const warnings = report.issues.length - errors;
+
+      banner.className = 'results-banner banner-fail';
+      banner.innerHTML = `
+        <div class="banner-icon">⚠️</div>
+        <div class="banner-content">
+          <div class="banner-title">${report.issueCount} Issue${report.issueCount === 1 ? '' : 's'} Found</div>
+          <div class="banner-desc">${errors} Error${errors === 1 ? '' : 's'} and ${warnings} Warning${warnings === 1 ? '' : 's'} detected in visible content or tag structure.</div>
+        </div>
+      `;
+    }
+  },
+
   _renderStats(report) {
-    document.getElementById('statRules').textContent = report.activeRules.length;
+    const totalRules = report.activeRules.length;
+    const issueCount = report.issueCount;
+
+    // Group issues by rule
+    const rulesWithIssues = new Set(report.issues.map(i => i.ruleId)).size;
+    const passedCount = totalRules - rulesWithIssues;
+    const healthScore = totalRules > 0 ? Math.round((passedCount / totalRules) * 100) : 100;
+
+    const rulesEl = document.getElementById('statRules');
+    if (rulesEl) rulesEl.textContent = totalRules;
 
     const issuesEl = document.getElementById('statIssues');
-    issuesEl.textContent = report.issueCount;
-    issuesEl.style.color = report.issueCount > 0 ? 'var(--fail)' : 'var(--pass)';
+    if (issuesEl) {
+      issuesEl.textContent = issueCount;
+      issuesEl.style.color = issueCount > 0 ? 'var(--fail)' : 'var(--pass)';
+    }
 
-    const linesEl = document.getElementById('statLines');
-    linesEl.textContent = report.parsed.lines.length;
-    linesEl.style.color = 'var(--text)';
+    const passedEl = document.getElementById('statPassed');
+    if (passedEl) passedEl.textContent = passedCount;
+
+    const scoreEl = document.getElementById('statScore');
+    if (scoreEl) {
+      scoreEl.textContent = `${healthScore}%`;
+      scoreEl.style.color = healthScore === 100 ? 'var(--pass)' : healthScore >= 70 ? 'var(--warn)' : 'var(--fail)';
+    }
+
+    // Update Filter Tab Counts
+    const cntAll = document.getElementById('filterCountAll');
+    if (cntAll) cntAll.textContent = totalRules;
+
+    const cntIssues = document.getElementById('filterCountIssues');
+    if (cntIssues) cntIssues.textContent = rulesWithIssues;
+
+    const cntPassed = document.getElementById('filterCountPassed');
+    if (cntPassed) cntPassed.textContent = passedCount;
+  },
+
+  exportReport() {
+    if (!this.currentReport) return;
+    const data = {
+      timestamp: new Date().toISOString(),
+      rulesRun: this.currentReport.activeRules.length,
+      totalIssues: this.currentReport.issueCount,
+      issues: this.currentReport.issues
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `validation-report-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   },
 
   _renderList() {

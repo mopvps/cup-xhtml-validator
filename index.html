@@ -31,21 +31,21 @@
         <div class="stepper-dot">1</div>
         <div class="stepper-text">
           <div class="stepper-title">Upload</div>
-          <div class="stepper-sub">Choose your XHTML file</div>
+          <div class="stepper-sub" id="sidebarStep1Sub">Choose your XHTML file</div>
         </div>
       </li>
       <li class="stepper-item" data-step="2">
         <div class="stepper-dot">2</div>
         <div class="stepper-text">
           <div class="stepper-title">Rules</div>
-          <div class="stepper-sub">Review active checks</div>
+          <div class="stepper-sub" id="sidebarStep2Sub">Review active checks</div>
         </div>
       </li>
       <li class="stepper-item" data-step="3">
         <div class="stepper-dot">3</div>
         <div class="stepper-text">
           <div class="stepper-title">Results</div>
-          <div class="stepper-sub">See the report</div>
+          <div class="stepper-sub" id="sidebarStep3Sub">See the report</div>
         </div>
       </li>
     </ol>
@@ -54,28 +54,116 @@
   <main class="content">
 
     <section class="step-panel active" data-step="1">
-      <h1 class="panel-title">Upload your file</h1>
-      <p class="panel-desc">Select an .xhtml file to check for issues.</p>
+      <div class="panel-header">
+        <h1 class="panel-title">Upload your XHTML file</h1>
+        <p class="panel-desc">Select or drop your .xhtml document to begin automated EPUB CUP validation.</p>
+      </div>
 
+      <!-- Upload Dropzone -->
       <div id="uploadBox" class="upload-box">
         <label class="upload-label">
-          <span class="upload-icon">⇧</span>
-          <span>Click to choose a .xhtml file</span>
+          <div class="upload-icon-wrap">
+            <svg class="upload-cloud-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="upload-text-main">Click to browse or drag & drop your .xhtml file</div>
+          <div class="upload-text-sub">Supported format: <code>.xhtml</code> · Recommended size: &lt; 300KB</div>
         </label>
         <input type="file" id="fileInput" accept=".xhtml" hidden />
-      </div>
-      <div id="fileName" class="file-name"></div>
 
-      <div class="panel-actions">
-        <button id="btnToStep2" class="btn btn-primary" disabled>Next</button>
+      </div>
+
+      <!-- File Details & Pre-Scan Dashboard (shown after file selection) -->
+      <div id="fileDetailsArea" class="file-details-area" style="display:none;">
+        <div id="fileName" class="file-name"></div>
+
+        <!-- Quick Pre-scan Stats Grid -->
+        <div class="file-stats-grid">
+          <div class="file-stat-item">
+            <span class="stat-icon">📄</span>
+            <div>
+              <div class="stat-val" id="preStatLines">0</div>
+              <div class="stat-lbl">Total Lines</div>
+            </div>
+          </div>
+          <div class="file-stat-item">
+            <span class="stat-icon">💾</span>
+            <div>
+              <div class="stat-val" id="preStatSize">0 KB</div>
+              <div class="stat-lbl">Size (Limit 300KB)</div>
+            </div>
+          </div>
+          <div class="file-stat-item">
+            <span class="stat-icon">🔤</span>
+            <div>
+              <div class="stat-val" id="preStatEncoding">UTF-8</div>
+              <div class="stat-lbl">Format Encoding</div>
+            </div>
+          </div>
+          <div class="file-stat-item">
+            <span class="stat-icon">⚙️</span>
+            <div>
+              <div class="stat-val" id="preStatStatus">Ready</div>
+              <div class="stat-lbl">Pre-check Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Code Preview Box -->
+        <div class="code-preview-box">
+          <div class="code-preview-header" id="btnToggleCodePreview">
+            <div class="code-preview-title">
+              <span>📄 Live XHTML Code Preview</span>
+              <span class="code-preview-badge" id="codeLinesCount">0 lines</span>
+            </div>
+            <span class="code-toggle-arrow">▼</span>
+          </div>
+          <div class="code-preview-body" id="codePreviewBody">
+            <pre><code id="codePreviewContent">Loading file content...</code></pre>
+          </div>
+        </div>
+
+        <!-- Main Step Actions -->
+        <div class="panel-actions file-step-actions">
+          <button id="btnToStep2" class="btn btn-primary btn-lg">Proceed to Rules →</button>
+          <button id="btnDirectValidate" class="btn btn-secondary btn-lg">⚡ Run Direct Validation</button>
+        </div>
+      </div>
+
+      <!-- Recent Files Section -->
+      <div id="recentFilesWrap" class="recent-files-wrap" style="display:none;">
+        <div class="recent-files-title">🕒 Recently Uploaded Files</div>
+        <div id="recentFilesList" class="recent-files-list"></div>
       </div>
     </section>
 
     <section class="step-panel" data-step="2">
-      <h1 class="panel-title">Active rules</h1>
-      <p class="panel-desc">These checks will run against your file.</p>
+      <div class="panel-header">
+        <h1 class="panel-title">Active rules</h1>
+        <p class="panel-desc">Configure which checks will run against your XHTML file.</p>
+      </div>
 
-      <div id="rulesList" class="rules-list"></div>
+      <div class="rules-toolbar">
+        <div class="rules-search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="ruleSearchInput" class="rules-search-input" placeholder="Search rules by name or keyword..." />
+          <button id="btnClearSearch" class="btn-clear-search" style="display:none;" aria-label="Clear search">&times;</button>
+        </div>
+        <div class="rules-actions">
+          <button id="btnEnableAll" class="btn btn-secondary btn-sm">Enable All</button>
+          <button id="btnDisableAll" class="btn btn-secondary btn-sm">Disable All</button>
+        </div>
+      </div>
+
+      <div id="rulesCategoryTabs" class="rules-category-tabs"></div>
+
+      <div id="rulesList" class="rules-grid"></div>
 
       <div class="panel-actions">
         <button id="btnBackTo1" class="btn btn-secondary">Back</button>
@@ -84,33 +172,60 @@
     </section>
 
     <section class="step-panel" data-step="3">
-      <h1 class="panel-title">Results</h1>
+      <div class="panel-header">
+        <h1 class="panel-title">Validation Results</h1>
+        <p class="panel-desc">Detailed report of checks executed against your document.</p>
+      </div>
+
+      <div id="resultsBanner" class="results-banner"></div>
 
       <div class="results-top">
         <div class="stat-card">
-          <div class="stat-value" id="statRules">0</div>
-          <div class="stat-label">Rules run</div>
+          <div class="stat-icon">📋</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statRules">0</div>
+            <div class="stat-label">Rules Run</div>
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="statIssues">0</div>
-          <div class="stat-label">Issues found</div>
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statIssues">0</div>
+            <div class="stat-label">Issues Found</div>
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="statLines">0</div>
-          <div class="stat-label">Lines checked</div>
+          <div class="stat-icon">✅</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statPassed">0</div>
+            <div class="stat-label">Passed Checks</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statScore">100%</div>
+            <div class="stat-label">Health Score</div>
+          </div>
         </div>
       </div>
 
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all">All</button>
-        <button class="filter-tab" data-filter="issues">Issues</button>
-        <button class="filter-tab" data-filter="passed">Passed</button>
+      <div class="results-toolbar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All (<span id="filterCountAll">0</span>)</button>
+          <button class="filter-tab" data-filter="issues">Issues (<span id="filterCountIssues">0</span>)</button>
+          <button class="filter-tab" data-filter="passed">Passed (<span id="filterCountPassed">0</span>)</button>
+        </div>
+        <div class="results-actions">
+          <button id="btnToggleExpand" class="btn btn-secondary btn-sm">Expand All</button>
+          <button id="btnExportReport" class="btn btn-secondary btn-sm">⬇ Export Report</button>
+        </div>
       </div>
 
       <div id="resultList" class="result-list"></div>
 
       <div class="panel-actions">
-        <button id="btnBackTo2" class="btn btn-secondary">Back</button>
+        <button id="btnBackTo2" class="btn btn-secondary">← Back to Rules</button>
       </div>
     </section>
 
